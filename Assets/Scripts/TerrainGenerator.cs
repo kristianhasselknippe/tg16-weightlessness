@@ -3,39 +3,51 @@ using System.Collections;
 
 [RequireComponent(typeof(MeshFilter)), RequireComponent(typeof(MeshFilter))]
 public class TerrainGenerator : MonoBehaviour {
-	public Vector3[] verts;
-    public Vector2[] uvs;
-    public int[] tris;
+	Vector3[] verts;
+    Vector2[] uvs;
+    int[] tris;
 
 
 	delegate float HeightFunction(float x);
 
 
-	void GenrateGeo(HeightFunction heightFun)
+	public float Length = 20;
+	public float Height = 2;
+	public float Interval = 0.1f;
+
+	void GenrateGeo(HeightFunction heightFun, params HeightFunction[] funs)
 	{
-		var length = 20;
-		var height = 2;
-
-		var interval = 0.1f;
-
-		var nSegments = (int)(length / interval);
+		var nSegments = (int)(Length / Interval);
 		var nVerts = (int)(nSegments * 2);
 
 
 		verts = new Vector3[nVerts];
 		uvs = new Vector2[nVerts];
+		var lowestY = float.MaxValue;
 		for (var i = 0; i < nVerts; i+=2)
 		{
-			var x = i * interval;
+			var x = i * Interval;
 			var yLow = heightFun(x);
-			var yHigh = yLow + height;
-			yLow = -10;
+			if (funs.Length > 0)
+			{
+				foreach (var hf in funs)
+					yLow += hf(x);
+			}
+			var yHigh = yLow + Height;
 
 			verts[i] = new Vector3(x, yHigh, 0);
 			verts[i+1] = new Vector3(x, yLow, 0);
 
 			uvs[i] = new Vector2(x,0);
 			uvs[i+1] = new Vector2(x,1);
+
+			if (yLow < lowestY)
+				lowestY = yLow;
+		}
+
+		for (int i = 1; i < nVerts - 2; i+=2)
+		{
+			verts[i].y = lowestY;
 		}
 
 
@@ -80,10 +92,12 @@ public class TerrainGenerator : MonoBehaviour {
 		texture = t;
 	}
 
-    void Start()
+	void RegenerateGeo()
 	{
 		GenrateGeo((x) => {
 				return Mathf.Sin(x) * Mathf.Cos(x / 10) * Mathf.Tan(x/4);
+			},(x) => {
+				return Length - x;
 			});
 		RenderTexture();
         Mesh mesh = new Mesh();
@@ -93,8 +107,15 @@ public class TerrainGenerator : MonoBehaviour {
         mesh.triangles = tris;
 		mesh.RecalculateNormals();
 
+		GetComponent<MeshFilter>().mesh = mesh;
+	}
 
-		var tex = Resources.Load("stonetexture") as Texture2D;
+    void Start()
+	{
+
+		RegenerateGeo();
+
+		//var tex = Resources.Load("stonetexture") as Texture2D;
 
 
 
@@ -105,7 +126,7 @@ public class TerrainGenerator : MonoBehaviour {
 		GetComponent<MeshRenderer>().material = mat;
 
 
-		GetComponent<MeshFilter>().mesh = mesh;
+
     }
 
 	// Update is called once per frame
