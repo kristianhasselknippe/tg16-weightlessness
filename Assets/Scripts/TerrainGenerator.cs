@@ -10,17 +10,13 @@ public class TerrainGenerator : MonoBehaviour {
 
 	delegate float HeightFunction(float x);
 
-	float Sine(float x)
-	{
-		return Mathf.Sin(x);
-	}
 
-	void GenrateGeo()
+	void GenrateGeo(HeightFunction heightFun)
 	{
-		var length = 10;
+		var length = 20;
 		var height = 2;
 
-		var interval = 0.2f;
+		var interval = 0.1f;
 
 		var nSegments = (int)(length / interval);
 		var nVerts = (int)(nSegments * 2);
@@ -31,9 +27,9 @@ public class TerrainGenerator : MonoBehaviour {
 		for (var i = 0; i < nVerts; i+=2)
 		{
 			var x = i * interval;
-			var yLow = Sine(x);
+			var yLow = heightFun(x);
 			var yHigh = yLow + height;
-
+			yLow = -10;
 
 			verts[i] = new Vector3(x, yHigh, 0);
 			verts[i+1] = new Vector3(x, yLow, 0);
@@ -46,7 +42,7 @@ public class TerrainGenerator : MonoBehaviour {
 		var nTris = (nSegments * 2) - 2;
 		tris = new int[nTris * 3];
 
-		Debug.Log("Ntris: " + nTris);
+
 		var currentT = 0;
 		for (var i = 0; i < nTris*3; i+=6)
 		{
@@ -86,7 +82,9 @@ public class TerrainGenerator : MonoBehaviour {
 
     void Start()
 	{
-		GenrateGeo();
+		GenrateGeo((x) => {
+				return Mathf.Sin(x) * Mathf.Cos(x / 10) * Mathf.Tan(x/4);
+			});
 		RenderTexture();
         Mesh mesh = new Mesh();
 
