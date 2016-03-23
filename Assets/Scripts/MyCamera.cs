@@ -3,7 +3,7 @@ using System.Collections;
 
 using System.Collections.Generic;
 
-public class Camera : MonoBehaviour {
+public class MyCamera : MonoBehaviour {
 
 	class KeyHandler
 	{
@@ -24,7 +24,8 @@ public class Camera : MonoBehaviour {
 	}
 
 
-	public float Speed = 3;
+	float Speed = 10;
+	float Acceleration = 0.6f;
 
 	Dictionary<KeyCode,KeyHandler> keys = new Dictionary<KeyCode,KeyHandler>();
 
@@ -43,6 +44,8 @@ public class Camera : MonoBehaviour {
 		AddKeyCode(KeyCode.E);
 		AddKeyCode(KeyCode.F);
 		AddKeyCode(KeyCode.Space);
+
+		Target = transform.position;
 	}
 
 	void UpdateHandlers()
@@ -51,6 +54,10 @@ public class Camera : MonoBehaviour {
 			keys[h].Update();
 
 	}
+
+	TerrainGenerator terrainGenerator;
+
+	Vector3 Target;
 
 	// Update is called once per frame
 	void Update () {
@@ -73,7 +80,24 @@ public class Camera : MonoBehaviour {
 		{
 			dir.x = 1;
 		}
-		var newPos =  transform.position + (dir.normalized * Time.deltaTime * Speed);
-		transform.position = newPos;
+
+		if (terrainGenerator == null)
+		{
+			var tgo = GameObject.Find("TerrainGenerator");
+			if (tgo != null)
+			{
+				terrainGenerator = tgo.GetComponent(typeof(TerrainGenerator)) as TerrainGenerator;
+			}
+		}
+
+		var newPos =  Target + (dir.normalized * Time.deltaTime * Speed);
+		newPos.y = terrainGenerator.GetHeightForX(newPos.x);
+
+		Target = newPos;
+
+		transform.position += (Target - transform.position) * Acceleration * Time.deltaTime;
+
+		DebugExtension.DebugPoint(Target, Color.red, 2);
+		Debug.DrawLine(Target, Target + terrainGenerator.GetTangentAtX(Target.x) * 3, Color.blue);
 	}
 }

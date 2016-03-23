@@ -15,7 +15,7 @@ public class TerrainGenerator : MonoBehaviour {
 	public float Height = 2;
 	public float Interval = 0.1f;
 
-	void GenrateGeo(HeightFunction heightFun, params HeightFunction[] funs)
+	void GenrateGeo(HeightFunction heightFun)
 	{
 		var nSegments = (int)(Length / Interval);
 		var nVerts = (int)(nSegments * 2);
@@ -26,14 +26,9 @@ public class TerrainGenerator : MonoBehaviour {
 		var lowestY = float.MaxValue;
 		for (var i = 0; i < nVerts; i+=2)
 		{
-			var x = i * Interval;
+			var x = (i/2) * Interval;
 			var yLow = heightFun(x);
-			if (funs.Length > 0)
-			{
-				foreach (var hf in funs)
-					yLow += hf(x);
-			}
-			var yHigh = yLow + Height;
+			var yHigh = yLow;
 
 			verts[i] = new Vector3(x, yHigh, 0);
 			verts[i+1] = new Vector3(x, yLow, 0);
@@ -82,7 +77,7 @@ public class TerrainGenerator : MonoBehaviour {
 			for (var y = 0; y < h; y++)
 			{
 				t.SetPixel(x,y, new Color(
-										  246/255f,
+							p			  246/255f,
 										  182/255f,
 										  30/255f,
 										  1));
@@ -92,13 +87,22 @@ public class TerrainGenerator : MonoBehaviour {
 		texture = t;
 	}
 
+	public float GetHeightForX(float x)
+	{
+		return (Mathf.Sin(x) * Mathf.Cos(x / 10) * Mathf.Tan(x/4)) + (Length - x);
+	}
+
+	public Vector3 GetTangentAtX(float x1)
+	{
+		var x2 = x1 + Interval;
+		var y1 = GetHeightForX(x1);
+		var y2 = GetHeightForX(x2);
+		return (new Vector3(x2,y2,0) - new Vector3(x1,y1,0)).normalized;
+	}
+
 	void RegenerateGeo()
 	{
-		GenrateGeo((x) => {
-				return Mathf.Sin(x) * Mathf.Cos(x / 10) * Mathf.Tan(x/4);
-			},(x) => {
-				return Length - x;
-			});
+		GenrateGeo(GetHeightForX);
 		RenderTexture();
         Mesh mesh = new Mesh();
 
@@ -126,12 +130,6 @@ public class TerrainGenerator : MonoBehaviour {
 		GetComponent<MeshRenderer>().material = mat;
 
 
-
-    }
-
-	// Update is called once per frame
-	void Update ()
-	{
 
 	}
 }
