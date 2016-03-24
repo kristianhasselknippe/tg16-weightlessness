@@ -61,11 +61,11 @@ public class TerrainManager : MonoBehaviour {
 	public Vector3 GetNormalAtX(float x)
 	{
 		var t = GetTangentAtX(x);
-		return -(new Vector3(t.y,-t.x,0));
+		return -(new Vector3(t.y,-t.x,0)).normalized;
 	}
 
 	public Vector3 GetTangentAtX(float x)
 	{
-		return GetSegmentAtX(x).GetTangentAtX(x);
+		return GetSegmentAtX(x).GetTangentAtX(x).normalized;
 	}
 }
