@@ -6,7 +6,7 @@ public class PlayerBody : MonoBehaviour {
 	public Vector3 Velocity = new Vector3(70,0,0);
 	float InverseMass = 0.5f;
 
-	float Drag = 2000f;
+	float Drag = 3000f;
 	float Bounciness = 0.7f;
 
 
@@ -21,8 +21,44 @@ public class PlayerBody : MonoBehaviour {
 		terrainManager = GameObject.Find("TerrainManager").GetComponent(typeof(TerrainManager)) as TerrainManager;
 	}
 
+
+
+	float PlaneDrag = 3000f;
+	float PlaneBounciness = 0.7f;
+	float BallDrag = 10000f;
+	float BallBounciness = 0.2f;
+	public bool InBallMode = false;
+	public void ToggleBallMode()
+	{
+		InBallMode = !InBallMode;
+		if (InBallMode)
+		{
+			Drag = BallDrag;
+			Bounciness = BallBounciness;
+
+			var ball = GameObject.Find("Ball");
+			if (ball == null)
+				Debug.Log("Could not find ball");
+			ball.GetComponent<Renderer>().enabled = true;
+			GameObject.Find("Plane").GetComponent<Renderer>().enabled = false;
+		}
+		else
+		{
+			Drag = PlaneDrag;
+			Bounciness = PlaneBounciness;
+			GameObject.Find("Ball").GetComponent<Renderer>().enabled = false;
+			GameObject.Find("Plane").GetComponent<Renderer>().enabled = true;
+		}
+	}
+
 	// Update is called once per frame
 	void Update () {
+		//Toggle ballmode on space
+		if (Input.GetKeyDown(KeyCode.Space))
+		{
+			ToggleBallMode();
+		}
+
 		//Apply gravity
 		ApplyForce(Gravity);
 

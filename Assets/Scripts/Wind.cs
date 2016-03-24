@@ -20,14 +20,14 @@ public class Wind : MonoBehaviour {
 
 	}
 
-	// Update is called once per frame
-	void Update () {
+	void UpdatePlaneMode()
+	{
 		var tilt = player.Tilt;
 
 		//var speedAgainstWindDirection;
 		var angleAgainstWindDirection =
 			Vector3.AngleBetween(Direction, player.Normal);
-//		Debug.Log("AngleAgainstWind: " + angleAgainstWindDirection);
+		//		Debug.Log("AngleAgainstWind: " + angleAgainstWindDirection);
 
 		var windReflectionVector = Vector3.Reflect(Direction, player.Normal).normalized;
 		var windReflectionForce = -windReflectionVector  * WindSpeed * Mathf.Clamp(playerBody.Velocity.magnitude,0,40) * 0.1f;
@@ -40,9 +40,28 @@ public class Wind : MonoBehaviour {
 
 		playerBody.ApplyForce(windReflectionForce); //Reflection vector
 		playerBody.ApplyForce(windDirectForce);
-
 		//Debug.DrawLine(player.transform.position, player.transform.position + windReflectionVector, Color.white);
 		//Debug.DrawLine(player.transform.position, player.transform.position - Direction*WindSpeed, Color.green);
+	}
+
+	void UpdateBallMode()
+	{
+		var windDirectForce = Direction * WindSpeed;
+		playerBody.ApplyForce(windDirectForce);
+	}
+
+	void Update ()
+	{
+
+		if (playerBody.InBallMode)
+		{
+			UpdateBallMode();
+		}
+		else
+		{
+			UpdatePlaneMode();
+		}
+
 
 
 
