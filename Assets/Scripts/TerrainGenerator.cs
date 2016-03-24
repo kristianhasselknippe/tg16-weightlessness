@@ -1,33 +1,57 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[RequireComponent(typeof(MeshFilter)), RequireComponent(typeof(MeshFilter))]
-public class TerrainGenerator : MonoBehaviour {
+public delegate float HeightFunction(float x);
+
+public class TerrainGenerator {
 	Vector3[] verts;
     Vector2[] uvs;
     int[] tris;
 
+	float Start;
+	float Length;
+	float Interval;
 
-	delegate float HeightFunction(float x);
+	float height;
+	public float Height
+	{
+		get { return height; }
+	}
 
+	public TerrainGenerator(float start, float length, float interval)
+	{
+		Start = start;
+		Length = length;
+		Interval = interval;
+	}
 
-	public float Length = 20;
-	public float Height = 2;
-	public float Interval = 0.1f;
+	public void InitGeo(MeshFilter filter, HeightFunction hf)
+	{
+		GenrateGeo(hf);
+        Mesh mesh = new Mesh();
+
+        mesh.vertices = verts;
+        mesh.uv = uvs;
+        mesh.triangles = tris;
+		mesh.RecalculateNormals();
+		filter.mesh = mesh;
+	}
 
 	void GenrateGeo(HeightFunction heightFun)
 	{
-		var nSegments = (int)(Length / Interval);
-		var nVerts = (int)(nSegments * 2);
-
+		var nSegments = Mathf.CeilToInt(Length / Interval);
+		Debug.Log("NSegments: "  + nSegments);
+		var nVerts = (int)((nSegments+1) * 2);
 
 		verts = new Vector3[nVerts];
 		uvs = new Vector2[nVerts];
 		var lowestY = float.MaxValue;
+		var highestY = float.MinValue;
+
 		for (var i = 0; i < nVerts; i+=2)
 		{
-			var x = (i/2) * Interval;
-			var yLow = heightFun(x);
+			var x = (i/2f) * Interval;
+			var yLow = heightFun(x + Start);
 			var yHigh = yLow;
 
 			verts[i] = new Vector3(x, yHigh, 0);
@@ -38,17 +62,20 @@ public class TerrainGenerator : MonoBehaviour {
 
 			if (yLow < lowestY)
 				lowestY = yLow;
+			if (yHigh > highestY)
+				highestY = yHigh;
+
 		}
 
-		for (int i = 1; i < nVerts - 2; i+=2)
+		height = highestY - lowestY;
+		for (int i = 1; i < nVerts; i+=2)
 		{
-			verts[i].y = lowestY;
+			verts[i].y = lowestY - 30;
+
 		}
 
-
-		var nTris = (nSegments * 2) - 2;
+		var nTris = (nSegments * 2);
 		tris = new int[nTris * 3];
-
 
 		var currentT = 0;
 		for (var i = 0; i < nTris*3; i+=6)
@@ -62,8 +89,10 @@ public class TerrainGenerator : MonoBehaviour {
 			tris[i+5] = currentT + 2;
 			currentT+=2;
 		}
+		Debug.Log("CurrentTEnd: " + currentT);
 	}
 
+	//todo(hassel): this sucks
 	Texture2D texture;
 	void RenderTexture()
 	{
@@ -76,60 +105,23 @@ public class TerrainGenerator : MonoBehaviour {
 		{
 			for (var y = 0; y < h; y++)
 			{
-				t.SetPixel(x,y, new Color(
-							p			  246/255f,
+				t.SetPixel(x,y, new Color(1,1,1,1));
+					/*246/255f,
 										  182/255f,
 										  30/255f,
-										  1));
+										  1));*/
 			}
 		}
 		t.Apply();
 		texture = t;
 	}
 
-	public float GetHeightForX(float x)
+	public void InitTexture(MeshRenderer meshRenderer)
 	{
-		return (Mathf.Sin(x) * Mathf.Cos(x / 10) * Mathf.Tan(x/4)) + (Length - x);
-	}
-
-	public Vector3 GetTangentAtX(float x1)
-	{
-		var x2 = x1 + Interval;
-		var y1 = GetHeightForX(x1);
-		var y2 = GetHeightForX(x2);
-		return (new Vector3(x2,y2,0) - new Vector3(x1,y1,0)).normalized;
-	}
-
-	void RegenerateGeo()
-	{
-		GenrateGeo(GetHeightForX);
 		RenderTexture();
-        Mesh mesh = new Mesh();
-
-        mesh.vertices = verts;
-        mesh.uv = uvs;
-        mesh.triangles = tris;
-		mesh.RecalculateNormals();
-
-		GetComponent<MeshFilter>().mesh = mesh;
-	}
-
-    void Start()
-	{
-
-		RegenerateGeo();
-
-		//var tex = Resources.Load("stonetexture") as Texture2D;
-
-
-
 		var mat = new Material(Shader.Find("Sprites/Default"));
 		mat.mainTexture = texture;
-
-
-		GetComponent<MeshRenderer>().material = mat;
-
-
-
+		meshRenderer.material = mat;
 	}
+
 }

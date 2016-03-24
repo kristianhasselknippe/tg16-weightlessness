@@ -55,7 +55,7 @@ public class MyCamera : MonoBehaviour {
 
 	}
 
-	TerrainGenerator terrainGenerator;
+	TerrainManager terrainManager;
 
 	Vector3 Target;
 
@@ -81,23 +81,25 @@ public class MyCamera : MonoBehaviour {
 			dir.x = 1;
 		}
 
-		if (terrainGenerator == null)
+		if (terrainManager == null)
 		{
-			var tgo = GameObject.Find("TerrainGenerator");
+			var tgo = GameObject.Find("TerrainManager");
 			if (tgo != null)
 			{
-				terrainGenerator = tgo.GetComponent(typeof(TerrainGenerator)) as TerrainGenerator;
+				terrainManager = tgo.GetComponent(typeof(TerrainManager)) as TerrainManager;
 			}
 		}
 
 		var newPos =  Target + (dir.normalized * Time.deltaTime * Speed);
-		newPos.y = terrainGenerator.GetHeightForX(newPos.x);
+		newPos.y = terrainManager.GetHeightForX(newPos.x);
 
 		Target = newPos;
 
 		transform.position += (Target - transform.position) * Acceleration * Time.deltaTime;
 
 		DebugExtension.DebugPoint(Target, Color.red, 2);
-		Debug.DrawLine(Target, Target + terrainGenerator.GetTangentAtX(Target.x) * 3, Color.blue);
+		Debug.DrawLine(Target, Target + terrainManager.GetTangentAtX(Target.x) * 3, Color.blue);
+
+		terrainManager.GetSegmentAtX(Target.x);
 	}
 }
