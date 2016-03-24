@@ -19,7 +19,6 @@ public class TerrainManager : MonoBehaviour {
 									segments.Count);
 
 		segments.Add(ts);
-		//ts.gameObject.transform.parent = transform;
 
 		var height = 0.0f;
 		foreach (var segment in segments)
@@ -29,13 +28,6 @@ public class TerrainManager : MonoBehaviour {
 		var pos = new Vector3(currentX, 0, 0);
 		ts.gameObject.transform.position = pos;
 
-		//note(hassel): This is perhaps not the best idea
-		/*var fillerPlane = GameObject.CreatePrimitive(PrimitiveType.Quad);
-		var fps = new Vector3(SegmentLength,20,1);
-		fillerPlane.transform.localScale = fps;
-		fillerPlane.transform.position =
-
-			new Vector3(currentX + (fps.x/2), (fps.y/2)-height);*/
 
 		currentX = currentX + SegmentLength;
 	}
