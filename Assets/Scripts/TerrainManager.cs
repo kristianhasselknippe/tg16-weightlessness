@@ -47,7 +47,7 @@ public class TerrainManager : MonoBehaviour {
 		if (index >= segments.Count)
 		{
 			AddSegmentsUntilAtIndex(index);
-			Debug.Log("adding segment");
+			//Debug.Log("adding segment");
 		}
 		//Debug.Log("SegmentsCoun: " + segments.Count);
 		return segments[index];
@@ -56,6 +56,12 @@ public class TerrainManager : MonoBehaviour {
 	public float GetHeightForX(float x)
 	{
 		return GetSegmentAtX(x).GetHeightForX(x);
+	}
+
+	public Vector3 GetNormalAtX(float x)
+	{
+		var t = GetTangentAtX(x);
+		return -(new Vector3(t.y,-t.x,0));
 	}
 
 	public Vector3 GetTangentAtX(float x)

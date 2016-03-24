@@ -24,8 +24,7 @@ public class MyCamera : MonoBehaviour {
 	}
 
 
-	float Speed = 10;
-	float Acceleration = 0.6f;
+	float Acceleration = 8f;
 
 	Dictionary<KeyCode,KeyHandler> keys = new Dictionary<KeyCode,KeyHandler>();
 
@@ -104,6 +103,7 @@ public class MyCamera : MonoBehaviour {
 
 		DebugExtension.DebugPoint(groundPos, Color.red, 2);
 		Debug.DrawLine(groundPos, groundPos + terrainManager.GetTangentAtX(targetPos.x) * 3, Color.blue);
+		Debug.DrawLine(groundPos, groundPos + terrainManager.GetNormalAtX(targetPos.x) * 3, Color.red);
 
 		terrainManager.GetSegmentAtX(targetPos.x);
 	}

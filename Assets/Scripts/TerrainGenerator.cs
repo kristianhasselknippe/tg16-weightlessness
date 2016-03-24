@@ -40,7 +40,7 @@ public class TerrainGenerator {
 	void GenrateGeo(HeightFunction heightFun)
 	{
 		var nSegments = Mathf.CeilToInt(Length / Interval);
-		Debug.Log("NSegments: "  + nSegments);
+		//Debug.Log("NSegments: "  + nSegments);
 		var nVerts = (int)((nSegments+1) * 2);
 
 		verts = new Vector3[nVerts];
@@ -89,7 +89,7 @@ public class TerrainGenerator {
 			tris[i+5] = currentT + 2;
 			currentT+=2;
 		}
-		Debug.Log("CurrentTEnd: " + currentT);
+		//Debug.Log("CurrentTEnd: " + currentT);
 	}
 
 	//todo(hassel): this sucks
