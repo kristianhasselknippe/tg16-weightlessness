@@ -45,7 +45,6 @@ public class MyCamera : MonoBehaviour {
 		AddKeyCode(KeyCode.F);
 		AddKeyCode(KeyCode.Space);
 
-		Target = transform.position;
 	}
 
 	void UpdateHandlers()
@@ -57,13 +56,13 @@ public class MyCamera : MonoBehaviour {
 
 	TerrainManager terrainManager;
 
-	Vector3 Target;
+	GameObject Target;
 
 	// Update is called once per frame
 	void Update () {
 		//UpdateHandlers();
 
-		var dir = new Vector3();
+		/*var dir = new Vector3();
 		if (Input.GetKey(KeyCode.W))
 		{
 			dir.y = 1;
@@ -79,7 +78,10 @@ public class MyCamera : MonoBehaviour {
 		if (Input.GetKey(KeyCode.D))
 		{
 			dir.x = 1;
-		}
+		}*/
+
+		if (Target == null)
+			Target = GameObject.Find("Player");
 
 		if (terrainManager == null)
 		{
@@ -90,16 +92,19 @@ public class MyCamera : MonoBehaviour {
 			}
 		}
 
-		var newPos =  Target + (dir.normalized * Time.deltaTime * Speed);
-		newPos.y = terrainManager.GetHeightForX(newPos.x);
+		var targetPos = new Vector3(Target.transform.position.x,
+									Target.transform.position.y,
+									transform.position.z);
+		var heightAtX = terrainManager.GetHeightForX(targetPos.x);
 
-		Target = newPos;
 
-		transform.position += (Target - transform.position) * Acceleration * Time.deltaTime;
+		transform.position += (targetPos - transform.position) * Acceleration * Time.deltaTime;
 
-		DebugExtension.DebugPoint(Target, Color.red, 2);
-		Debug.DrawLine(Target, Target + terrainManager.GetTangentAtX(Target.x) * 3, Color.blue);
+		var groundPos = new Vector3(targetPos.x,heightAtX,0);
 
-		terrainManager.GetSegmentAtX(Target.x);
+		DebugExtension.DebugPoint(groundPos, Color.red, 2);
+		Debug.DrawLine(groundPos, groundPos + terrainManager.GetTangentAtX(targetPos.x) * 3, Color.blue);
+
+		terrainManager.GetSegmentAtX(targetPos.x);
 	}
 }
