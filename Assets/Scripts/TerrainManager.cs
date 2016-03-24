@@ -24,7 +24,6 @@ public class TerrainManager : MonoBehaviour {
 		foreach (var segment in segments)
 			height += segment.Height;
 
-		Debug.Log("extending to: " + height);
 		var pos = new Vector3(currentX, 0, 0);
 		ts.gameObject.transform.position = pos;
 
@@ -47,9 +46,7 @@ public class TerrainManager : MonoBehaviour {
 		if (index >= segments.Count)
 		{
 			AddSegmentsUntilAtIndex(index);
-			//Debug.Log("adding segment");
 		}
-		//Debug.Log("SegmentsCoun: " + segments.Count);
 		return segments[index];
 	}
 

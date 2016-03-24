@@ -37,8 +37,6 @@ public class PlayerBody : MonoBehaviour {
 			Bounciness = BallBounciness;
 
 			var ball = GameObject.Find("Ball");
-			if (ball == null)
-				Debug.Log("Could not find ball");
 			ball.GetComponent<Renderer>().enabled = true;
 			GameObject.Find("Plane").GetComponent<Renderer>().enabled = false;
 		}
@@ -56,7 +54,6 @@ public class PlayerBody : MonoBehaviour {
 		var terrainPos = terrainManager.GetHeightForX(transform.position.x);
 		if (transform.position.y <= terrainPos)//we have hit terrain
 		{
-			Debug.Log("Did collide");
 			var terrainNormal = terrainManager.GetNormalAtX(transform.position.x);
 			var reflectionVector = Vector3.Reflect(Velocity, terrainNormal);
 			var posAfterImpulse = new Vector3(transform.position.x, terrainPos, 0);
@@ -74,6 +71,9 @@ public class PlayerBody : MonoBehaviour {
 			new Vector3(transform.position.x + x, transform.position.y + y,0);
 	}
 
+
+	float ballLockinThreshold = 0.2f;
+	bool lockedIn = false;
 	void BounceBall()
 	{
 		var terrainPos = terrainManager.GetHeightForX(transform.position.x);
@@ -81,11 +81,29 @@ public class PlayerBody : MonoBehaviour {
 		{
 			var x = transform.position.x; var y = transform.position.y;
 			var distanceInside = terrainPos - y;
-			Debug.Log("Did collide");
+
 			var terrainNormal = terrainManager.GetNormalAtX(x);
 			var terrainTangent = terrainManager.GetTangentAtX(x);
-			Debug.Log("Distance insdie: " + distanceInside);
+
+			//Impulse resolution
 			MoveTransformBy(terrainNormal.x * distanceInside,terrainNormal.y * distanceInside);
+
+			var tangentVelocityAngle = Vector3.AngleBetween(Velocity, terrainTangent);
+			Debug.Log("TangentVelAng: " + tangentVelocityAngle);
+			if (tangentVelocityAngle < ballLockinThreshold)
+			{
+				Debug.Log("Locked in");
+				lockedIn = true;
+				var velocityMagnitute = Velocity.magnitude;
+				Velocity = terrainTangent * velocityMagnitute;
+			}
+			else
+			{
+				lockedIn = false;
+				BouncePlane();
+				return;
+			}
+
 			var force = terrainTangent * Velocity.magnitude * BallBounciness * 0.1f;
 			ApplyForce(force);
 		}
@@ -100,7 +118,18 @@ public class PlayerBody : MonoBehaviour {
 		}
 
 		//Apply gravity
-		ApplyForce(Gravity);
+		if (!lockedIn)
+		{
+			ApplyForce(Gravity);
+		}
+		else
+		{
+			ApplyForce(new Vector3(Mathf.Clamp(Gravity.x, 0, float.MaxValue),
+								   Mathf.Clamp(Gravity.y, 0, float.MaxValue),
+								   0));
+		}
+
+
 
 		//Apply drag
 		ApplyForce(-Velocity.normalized *
@@ -122,7 +151,6 @@ public class PlayerBody : MonoBehaviour {
 		transform.position +=
 			Velocity * InverseMass * Time.deltaTime * DEBUG_MULTIPLIER;
 
-		//Debug.Log("Velocity: " + Velocity.magnitude);
 	}
 
 	public void ApplyForce(Vector3 force)

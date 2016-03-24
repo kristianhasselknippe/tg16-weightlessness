@@ -3,7 +3,7 @@ using System.Collections;
 
 public class Wind : MonoBehaviour {
 
-	float WindSpeed = 1f;
+	float WindSpeed = 0.3f;
 	Vector3 Direction = new Vector3(-1,1,0);
 
 	Player player;
@@ -20,6 +20,7 @@ public class Wind : MonoBehaviour {
 
 	}
 
+
 	void UpdatePlaneMode()
 	{
 		var tilt = player.Tilt;
@@ -27,7 +28,6 @@ public class Wind : MonoBehaviour {
 		//var speedAgainstWindDirection;
 		var angleAgainstWindDirection =
 			Vector3.AngleBetween(Direction, player.Normal);
-		//		Debug.Log("AngleAgainstWind: " + angleAgainstWindDirection);
 
 		var windReflectionVector = Vector3.Reflect(Direction, player.Normal).normalized;
 		var windReflectionForce = -windReflectionVector  * WindSpeed * Mathf.Clamp(playerBody.Velocity.magnitude,0,40) * 0.1f;
@@ -40,8 +40,6 @@ public class Wind : MonoBehaviour {
 
 		playerBody.ApplyForce(windReflectionForce); //Reflection vector
 		playerBody.ApplyForce(windDirectForce);
-		//Debug.DrawLine(player.transform.position, player.transform.position + windReflectionVector, Color.white);
-		//Debug.DrawLine(player.transform.position, player.transform.position - Direction*WindSpeed, Color.green);
 	}
 
 	void UpdateBallMode()
