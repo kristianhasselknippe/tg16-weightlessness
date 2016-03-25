@@ -14,12 +14,15 @@ public class Player : MonoBehaviour {
 	}
 
 	bool InBallMode = true;
+	bool InPlaneMode { get { return !InBallMode; } }
+
 	void HandleInput()
 	{
+		var t = 0f;
 		if (Input.GetKey(KeyCode.A))
-			Tilt += 1f;
+			t += 1f;
 		if (Input.GetKey(KeyCode.D))
-			Tilt -= 1f;
+			t -= 1f;
 		if (Input.GetKeyDown(KeyCode.Space))
 		{
 			InBallMode = !InBallMode;
@@ -36,6 +39,10 @@ public class Player : MonoBehaviour {
 				pr.enabled = true;
 			}
 		}
+
+		Tilt += t * TiltSpeed * Time.deltaTime;
+		Tilt = Mathf.Clamp(Tilt, -1.4f, 1.4f);
+		transform.rotation = Quaternion.AxisAngle(new Vector3(0,0,1), Tilt);
 	}
 
 	Vector3 EstimateClosestPoint(float groundHeight)
@@ -118,8 +125,10 @@ public class Player : MonoBehaviour {
 		}
 
 
+		if (InPlaneMode)
+		{
 
-
+		}
 
 		transform.position += Velocity * Time.deltaTime;
 		lastTangent = groundTangent;
