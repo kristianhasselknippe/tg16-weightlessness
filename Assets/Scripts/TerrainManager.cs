@@ -3,13 +3,19 @@ using System.Collections.Generic;
 
 public class TerrainManager : MonoBehaviour {
 
+	GameObject Player;
 
-	float SegmentLength = 5;
+	float SegmentLength = 20;
 	float Interval = 0.1f;
 
 	List<TerrainSegment> segments = new List<TerrainSegment>();
 
 	float currentX = 0;
+
+	void Start()
+	{
+		Player = GameObject.Find("Player");
+	}
 
 	public void Extend()
 	{
@@ -64,5 +70,12 @@ public class TerrainManager : MonoBehaviour {
 	public Vector3 GetTangentAtX(float x)
 	{
 		return GetSegmentAtX(x).GetTangentAtX(x).normalized;
+	}
+
+
+	void Update()
+	{
+		var pos = Player.transform.position;
+		GetSegmentAtX(pos.x);
 	}
 }

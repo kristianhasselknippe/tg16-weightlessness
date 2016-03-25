@@ -21,7 +21,7 @@ public class TerrainSegment
 	//note(hassel): Height function
 	public float GetHeightForX(float x)
 	{
-		return (Mathf.Sin(x) * Mathf.Cos(x / 10) * Mathf.Tan(x/4)) + (SegmentLength - x);
+		return Mathf.Sin(x*0.5f) * 2 + Mathf.Sin(x/5)*3;
 	}
 
 	public Vector3 GetTangentAtX(float x1)
