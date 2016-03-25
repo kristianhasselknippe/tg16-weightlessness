@@ -3,12 +3,7 @@ using System.Collections;
 
 public class Player : MonoBehaviour {
 
-	float TiltSpeed = 3f;
-	float Tilt = 0f;
-	Vector3 Normal = new Vector3(0,-1,0);
 
-	Vector3 Velocity = Vector3.zero;
-	float Damping = 0.4f;
 
 	TerrainManager TM;
 
@@ -66,9 +61,20 @@ public class Player : MonoBehaviour {
 		return new Vector3(lowestDistPoint.x, lowestDistPoint.y,0f);
 	}
 
+	float TiltSpeed = 3f;
+	float Tilt = 0f;
+	Vector3 Normal = new Vector3(0,-1,0);
+
+	Vector3 Velocity = Vector3.zero;
+	float Damping = 0.4f;
+
 	float lockinThreshold = 40f;
 	bool lockedIn = false;
 	Vector3 lastTangent;
+
+	Vector3 WindDirection = new Vector3(-1,0,0);
+	float WindSpeed = 1f;
+
 	void Update () {
 		HandleInput();
 		//Gravity
