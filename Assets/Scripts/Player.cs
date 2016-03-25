@@ -6,15 +6,35 @@ public class Player : MonoBehaviour {
 
 
 	TerrainManager TM;
+	bool simulate = true;
 
 	void Start()
 	{
 		TM = GameObject.Find("TerrainManager").GetComponent<TerrainManager>();
 		lastTangent = TM.GetTangentAtX(transform.position.x);
+
+		SetInBallMode(InBallMode);
 	}
 
-	bool InBallMode = true;
+	bool InBallMode = false;
 	bool InPlaneMode { get { return !InBallMode; } }
+
+	void SetInBallMode(bool t)
+	{
+		InBallMode = t;
+		var br = GameObject.Find("Ball").GetComponent<Renderer>();
+		var pr = GameObject.Find("Plane").GetComponent<Renderer>();
+		if (InBallMode)
+		{
+			br.enabled = true;
+			pr.enabled = false;
+		}
+		else
+		{
+			br.enabled = false;
+			pr.enabled = true;
+		}
+	}
 
 	void HandleInput()
 	{
@@ -23,21 +43,15 @@ public class Player : MonoBehaviour {
 			t += 1f;
 		if (Input.GetKey(KeyCode.D))
 			t -= 1f;
+		if (Input.GetKey(KeyCode.R))
+		{
+			Velocity = Vector3.zero;
+			simulate = !simulate;
+		}
+
 		if (Input.GetKeyDown(KeyCode.Space))
 		{
-			InBallMode = !InBallMode;
-			var br = GameObject.Find("Ball").GetComponent<Renderer>();
-			var pr = GameObject.Find("Plane").GetComponent<Renderer>();
-			if (InBallMode)
-			{
-				br.enabled = true;
-				pr.enabled = false;
-			}
-			else
-			{
-				br.enabled = false;
-				pr.enabled = true;
-			}
+			SetInBallMode(!InBallMode);
 		}
 
 		Tilt += t * TiltSpeed * Time.deltaTime;
@@ -73,7 +87,9 @@ public class Player : MonoBehaviour {
 	Vector3 Normal = new Vector3(0,-1,0);
 
 	Vector3 Velocity = Vector3.zero;
+	Vector3 Acceleration = Vector3.zero;
 	float Damping = 0.4f;
+	float Drag = 1f;
 
 	float lockinThreshold = 40f;
 	bool lockedIn = false;
@@ -82,20 +98,31 @@ public class Player : MonoBehaviour {
 	Vector3 WindDirection = new Vector3(-1,0,0);
 	float WindSpeed = 1f;
 
+	float SimulationFactor = 1f;
+
 	void Update () {
+		if (simulate)
+		{
+			Velocity += Acceleration * Time.deltaTime;
+			transform.position += Velocity * Time.deltaTime * SimulationFactor;
+		}
+
+		Acceleration = Vector3.zero;
 		HandleInput();
 		//Gravity
-		Velocity += new Vector3(0f,-0.3f,0f);
+		Acceleration += new Vector3(0f,-15f,0f);
 
 		var pos = transform.position;
 		var groundHeight = TM.GetHeightForX(pos.x);
 		var groundPos = new Vector3(pos.x,groundHeight,0);
 		var groundNormal = TM.GetNormalAtX(pos.x);
 		var groundTangent = TM.GetTangentAtX(pos.x);
+		var playerNormal = Quaternion.Euler(0,0,Tilt * Mathf.Rad2Deg) * Vector3.down;
 
 		var closestPoint = EstimateClosestPoint(groundHeight); //move in when no debug is needed
 		if (pos.y < groundHeight)
 		{
+			Debug.Log("Collided " + Time.deltaTime);
 			transform.position = closestPoint; //impulse resolution
 
 			var angle = Vector3.Angle(groundTangent, Velocity);
@@ -110,31 +137,45 @@ public class Player : MonoBehaviour {
 			{
 				var magnitude = Velocity.magnitude;
 				Velocity = groundTangent * magnitude;
+				Acceleration = Vector3.zero;
+
 			}
 			else // bounce
 			{
 				var reflectionVector = Vector3.Reflect(Velocity, groundNormal);
 				Velocity = reflectionVector * Damping;
+				Acceleration = Vector3.zero;
 			}
 		}
 
 		if (lockedIn)
 		{
 			if (groundTangent.y < lastTangent.y)
+			{
+				Debug.Log("Release lock in" + Time.deltaTime);
 				lockedIn = false;
+			}
 		}
+
 
 
 		if (InPlaneMode)
 		{
-
+			var windResistance = -Velocity.normalized;
+			var windResistanceReflection = Vector3.Reflect(windResistance, playerNormal).normalized;
+			var windResistanceAngle = Mathf.Abs(Vector3.Dot(playerNormal, Velocity.normalized));
+			var windResistancePush = -windResistanceReflection;
+			Debug.DrawLine(pos, pos + windResistancePush, Color.green);
+			var windAcceleration = windResistancePush * Drag * windResistanceAngle * Velocity.magnitude;
+			Acceleration += windAcceleration + windResistance * Drag * Velocity.magnitude;
 		}
 
-		transform.position += Velocity * Time.deltaTime;
+
 		lastTangent = groundTangent;
 
-		DebugExtension.DebugPoint(closestPoint, Color.black);
-		Debug.DrawLine(groundPos, groundPos + groundNormal, Color.red); //Draw normal
+		//DebugExtension.DebugPoint(closestPoint, Color.black);
+		//Debug.DrawLine(groundPos, groundPos + groundNormal, Color.red); //Draw normal
 		Debug.DrawLine(groundPos, groundPos + groundTangent, Color.red); //Draw tangent
+		Debug.DrawLine(pos, pos + playerNormal, Color.green); //Player normal
 	}
 }
